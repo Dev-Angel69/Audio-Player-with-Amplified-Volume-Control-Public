@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Player with Amplified Volume Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+            margin: 0; /* Ensure no extra margin */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        audio {
+            margin-top: 20px;
+        }
+        .volume-container {
+            margin-top: 20px;
+        }
+        .volume-container input {
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        .volume-container span {
+            margin-left: 10px;
+            font-size: 1.2em;
+        }
+        .warning {
+            margin-top: 40px;
+            padding: 10px;
+            background-color: #ffdddd;
+            color: #d8000c;
+            border: 1px solid #d8000c;
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+        /* Black bars on the sides with stars */
+        .black-bar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            width: 100px; /* Width of the black bars */
+            background-color: black;
+            z-index: -1; /* Ensure they are behind content */
+            overflow: hidden; /* Hide overflow for stars */
+        }
+        .black-bar.left {
+            left: 0;
+        }
+        .black-bar.right {
+            right: 0;
+        }
+        .black-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHBhdGggZD0iTTQ1LjQsMTYuNGwzLTQuM3YtMy4yTDAsNDFoMTkuMnYtMy4yTDM4LjgsMTMuN2MwLDEuMSwzLjMsMy41LDMuMiwzLjMtMy4zTDAsNDIuN0MwLjk2LDM0LjgsMCwzMC44LDEwLjEsMzAuNiwxMGMwLC0xLDEuNSwyLDEuNSwyLDQuM0w0MSwyM0MwLDE5LjksMy4zLDIsMy4zLDIuMyw0Mi41LDUuNiw1My4zLDE2LDE2LDE1LDE2LDE0LDEzLDEyLDEwLDEwLDEwTDEyLDE1LDEyLDEyLDE2LDE4bC0zLDIsLTQsMi43LTAsMTAwIiBmaWxsPSJ3aGl0ZSIvPjwvc3ZnPg==') repeat;
+            z-index: -1;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="black-bar left"></div>
+    <div class="black-bar right"></div>
+
+    <h1>Audio Player with Amplified Volume Control</h1>
+    <input type="file" id="fileInput" accept="audio/*">
+    <audio id="audioPlayer" controls>
+        Your browser does not support the audio element.
+    </audio>
+    <div class="volume-container">
+        <label for="volumeControl">Volume:</label>
+        <input type="range" id="volumeControl" min="0" max="2" step="0.01" value="1">
+        <span id="volumeValue">1</span> <!-- Display volume value -->
+    </div>
+
+    <!-- Warning message -->
+    <div class="warning">
+        <p><strong>Warning:</strong> Listening to music at high volumes can damage your hearing and sound system. Please adjust the volume carefully to avoid any damage.</p>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const volumeControl = document.getElementById('volumeControl');
+        const volumeValue = document.getElementById('volumeValue');
+
+        let audioContext;
+        let sourceNode;
+        let gainNode;
+
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const audioURL = URL.createObjectURL(file);
+
+                // If an AudioContext already exists, stop the current audio context
+                if (audioContext) {
+                    audioContext.close();
+                }
+
+                // Create a new AudioContext
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                gainNode = audioContext.createGain();
+                gainNode.gain.value = 1; // Default gain value
+
+                // Set up the new audio source
+                sourceNode = audioContext.createMediaElementSource(audioPlayer);
+                sourceNode.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                audioPlayer.src = audioURL;
+                audioPlayer.play();
+
+                // Update the volume when the slider changes
+                volumeControl.addEventListener('input', function() {
+                    gainNode.gain.value = volumeControl.value;
+                    volumeValue.textContent = volumeControl.value; // Update volume value display
+                });
+            }
+        });
+
+        // Initial volume display update
+        volumeValue.textContent = volumeControl.value;
+    </script>
+</body>
+</html>
